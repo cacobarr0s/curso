@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tabela Verdade</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    select, table {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 300px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tabela Verdade</h1>
+  <label for="operador">Escolha o conector lógico:</label>
+  <select id="operador" onchange="gerarTabela()">
+    <option value="E">E (∧)</option>
+    <option value="OU">OU (∨)</option>
+    <option value="SE">Se... então (→)</option>
+    <option value="DSE">Se e somente se (↔)</option>
+    <option value="NAO">Não (¬)</option>
+  </select>
+
+  <div id="tabela-container"></div>
+
+  <script>
+    function gerarTabela() {
+      const operador = document.getElementById("operador").value;
+      const container = document.getElementById("tabela-container");
+
+      const valores = ['V', 'F'];
+      let html = "<table><tr>";
+
+      if (operador === "NAO") {
+        html += "<th>P</th><th>¬P</th></tr>";
+        valores.forEach(p => {
+          const resultado = (p === 'V') ? 'F' : 'V';
+          html += `<tr><td>${p}</td><td>${resultado}</td></tr>`;
+        });
+      } else {
+        html += "<th>P</th><th>Q</th><th>Resultado</th></tr>";
+        valores.forEach(p => {
+          valores.forEach(q => {
+            let resultado = '';
+            switch (operador) {
+              case 'E': // AND
+                resultado = (p === 'V' && q === 'V') ? 'V' : 'F';
+                break;
+              case 'OU': // OR
+                resultado = (p === 'V' || q === 'V') ? 'V' : 'F';
+                break;
+              case 'SE': // Implicação
+                resultado = (p === 'V' && q === 'F') ? 'F' : 'V';
+                break;
+              case 'DSE': // Bicondicional
+                resultado = (p === q) ? 'V' : 'F';
+                break;
+            }
+            html += `<tr><td>${p}</td><td>${q}</td><td>${resultado}</td></tr>`;
+          });
+        });
+      }
+
+      html += "</table>";
+      container.innerHTML = html;
+    }
+
+    gerarTabela(); // Gera a tabela inicial
+  </script>
+</body>
+</html>
