@@ -2,83 +2,189 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Tabela Verdade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabelas Verdade</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: #e0e0e0;
+      transition: background-color 0.3s, color 0.3s;
     }
-    select, table {
-      margin-top: 20px;
-      font-size: 16px;
-    }
-    table {
-      border-collapse: collapse;
-      width: 300px;
-    }
-    th, td {
-      border: 1px solid #333;
-      padding: 8px;
+
+    header {
+      background-color: #1f1f1f;
+      padding: 1rem;
       text-align: center;
     }
+
+    h1 { margin: 0; }
+
+    #theme-toggle {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #3f51b5;
+      color: white;
+    }
+
+    .container {
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #555;
+      border-radius: 6px;
+      background: #1f1f1f;
+      color: #e0e0e0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      border: 1px solid #444;
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    th {
+      background-color: #2c2c2c;
+    }
+
+    tr:nth-child(even) { background-color: #1a1a1a; }
+
+    .light-mode {
+      background-color: #f5f5f5;
+      color: #222;
+    }
+    .light-mode header { background-color: #ddd; }
+    .light-mode select {
+      background: #fff;
+      color: #222;
+      border: 1px solid #aaa;
+    }
+    .light-mode th { background-color: #ccc; }
+    .light-mode tr:nth-child(even) { background-color: #eee; }
   </style>
 </head>
 <body>
-  <h1>Tabela Verdade</h1>
-  <label for="operador">Escolha o conector lógico:</label>
-  <select id="operador" onchange="gerarTabela()">
-    <option value="E">E (∧)</option>
-    <option value="OU">OU (∨)</option>
-    <option value="SE">Se... então (→)</option>
-    <option value="DSE">Se e somente se (↔)</option>
-    <option value="NAO">Não (¬)</option>
-  </select>
+  <header>
+    <h1>Tabelas Verdade</h1>
+    <button id="theme-toggle">Alternar Tema</button>
+  </header>
 
-  <div id="tabela-container"></div>
+  <div class="container">
+    <label for="connector">Escolha um conector lógico:</label>
+    <select id="connector">
+      <option value="E">Conjunção (E)</option>
+      <option value="OU">Disjunção (OU)</option>
+      <option value="NAO">Negação (NÃO)</option>
+      <option value="SE">Condicional (SE... ENTÃO)</option>
+      <option value="SSE">Bicondicional (SE E SOMENTE SE)</option>
+    </select>
+
+    <div id="explanation"></div>
+    <div id="truth-table"></div>
+  </div>
 
   <script>
-    function gerarTabela() {
-      const operador = document.getElementById("operador").value;
-      const container = document.getElementById("tabela-container");
+    const explanation = document.getElementById('explanation');
+    const tableDiv = document.getElementById('truth-table');
+    const connectorSelect = document.getElementById('connector');
+    const themeToggle = document.getElementById('theme-toggle');
 
-      const valores = ['V', 'F'];
-      let html = "<table><tr>";
-
-      if (operador === "NAO") {
-        html += "<th>P</th><th>¬P</th></tr>";
-        valores.forEach(p => {
-          const resultado = (p === 'V') ? 'F' : 'V';
-          html += `<tr><td>${p}</td><td>${resultado}</td></tr>`;
-        });
-      } else {
-        html += "<th>P</th><th>Q</th><th>Resultado</th></tr>";
-        valores.forEach(p => {
-          valores.forEach(q => {
-            let resultado = '';
-            switch (operador) {
-              case 'E': // AND
-                resultado = (p === 'V' && q === 'V') ? 'V' : 'F';
-                break;
-              case 'OU': // OR
-                resultado = (p === 'V' || q === 'V') ? 'V' : 'F';
-                break;
-              case 'SE': // Implicação
-                resultado = (p === 'V' && q === 'F') ? 'F' : 'V';
-                break;
-              case 'DSE': // Bicondicional
-                resultado = (p === q) ? 'V' : 'F';
-                break;
-            }
-            html += `<tr><td>${p}</td><td>${q}</td><td>${resultado}</td></tr>`;
-          });
-        });
+    const data = {
+      "E": {
+        desc: "A conjunção (E) só é verdadeira quando as duas proposições são verdadeiras.",
+        table: `
+          <table>
+            <thead><tr><th>P</th><th>Q</th><th>P ∧ Q</th></tr></thead>
+            <tbody>
+              <tr><td>V</td><td>V</td><td>V</td></tr>
+              <tr><td>V</td><td>F</td><td>F</td></tr>
+              <tr><td>F</td><td>V</td><td>F</td></tr>
+              <tr><td>F</td><td>F</td><td>F</td></tr>
+            </tbody>
+          </table>`
+      },
+      "OU": {
+        desc: "A disjunção (OU) é verdadeira quando pelo menos uma das proposições é verdadeira.",
+        table: `
+          <table>
+            <thead><tr><th>P</th><th>Q</th><th>P ∨ Q</th></tr></thead>
+            <tbody>
+              <tr><td>V</td><td>V</td><td>V</td></tr>
+              <tr><td>V</td><td>F</td><td>V</td></tr>
+              <tr><td>F</td><td>V</td><td>V</td></tr>
+              <tr><td>F</td><td>F</td><td>F</td></tr>
+            </tbody>
+          </table>`
+      },
+      "NAO": {
+        desc: "A negação (NÃO) inverte o valor lógico da proposição.",
+        table: `
+          <table>
+            <thead><tr><th>P</th><th>¬P</th></tr></thead>
+            <tbody>
+              <tr><td>V</td><td>F</td></tr>
+              <tr><td>F</td><td>V</td></tr>
+            </tbody>
+          </table>`
+      },
+      "SE": {
+        desc: "O condicional (SE... ENTÃO) só é falso quando a primeira proposição é verdadeira e a segunda é falsa.",
+        table: `
+          <table>
+            <thead><tr><th>P</th><th>Q</th><th>P → Q</th></tr></thead>
+            <tbody>
+              <tr><td>V</td><td>V</td><td>V</td></tr>
+              <tr><td>V</td><td>F</td><td>F</td></tr>
+              <tr><td>F</td><td>V</td><td>V</td></tr>
+              <tr><td>F</td><td>F</td><td>V</td></tr>
+            </tbody>
+          </table>`
+      },
+      "SSE": {
+        desc: "O bicondicional (SE E SOMENTE SE) é verdadeiro quando as duas proposições têm o mesmo valor lógico.",
+        table: `
+          <table>
+            <thead><tr><th>P</th><th>Q</th><th>P ↔ Q</th></tr></thead>
+            <tbody>
+              <tr><td>V</td><td>V</td><td>V</td></tr>
+              <tr><td>V</td><td>F</td><td>F</td></tr>
+              <tr><td>F</td><td>V</td><td>F</td></tr>
+              <tr><td>F</td><td>F</td><td>V</td></tr>
+            </tbody>
+          </table>`
       }
+    };
 
-      html += "</table>";
-      container.innerHTML = html;
+    function updateContent() {
+      const choice = connectorSelect.value;
+      explanation.innerHTML = `<p>${data[choice].desc}</p>`;
+      tableDiv.innerHTML = data[choice].table;
     }
 
-    gerarTabela(); // Gera a tabela inicial
+    connectorSelect.addEventListener('change', updateContent);
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+    });
+
+    // Inicializar
+    updateContent();
   </script>
 </body>
 </html>
