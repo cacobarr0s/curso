@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Estruturas de Controle — Demo Interativa</title>
+<style>
+  :root{
+    --bg:#0b0b0c; --panel:#111215; --panel2:#141416; --text:#e8e8e8;
+    --muted:#aab0b8; --accent:#2a66ff; --card:#121216;
+  }
+  :root.light{ --bg:#f6f7fb; --panel:#ffffff; --panel2:#f8f9fc; --text:#121214; --muted:#55606b; --accent:#2563eb; --card:#ffffff; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+  header{position:sticky;top:0;background:color-mix(in oklab,var(--panel),transparent 10%);border-bottom:1px solid rgba(255,255,255,0.03); backdrop-filter: blur(6px); z-index:10}
+  .wrap{max-width:1100px;margin:0 auto;padding:14px}
+  .title{display:flex;gap:12px;align-items:center}
+  h1{font-size:1.3rem;margin:0}
+  .controls{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  button, select, input{font:inherit}
+  .btn{background:var(--panel2);border:1px solid rgba(255,255,255,0.03);padding:8px 10px;border-radius:10px;color:var(--text);cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--accent),color-mix(in oklab,var(--accent),black 10%)); color:white;border:none}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
+  @media(min-width:880px){ .grid{grid-template-columns:360px 1fr} }
+  .card{background:var(--card);border:1px solid rgba(255,255,255,0.03);border-radius:12px;padding:14px}
+  .menu{display:flex;flex-direction:column;gap:8px}
+  .menu button{display:flex;gap:10px;align-items:center;justify-content:space-between}
+  .menu .item{padding:10px;border-radius:8px;text-align:left;background:transparent;border:1px solid transparent}
+  .menu .item.active{background:linear-gradient(90deg, color-mix(in oklab,var(--accent),var(--panel2) 10%), transparent);border-color:rgba(0,0,0,0.15)}
+  label.small{font-size:0.86rem;color:var(--muted);display:block;margin-bottom:6px}
+  pre.code{background:var(--panel2);padding:10px;border-radius:8px;overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;font-size:0.95rem;color:var(--text)}
+  .example-run{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .result{background:rgba(0,0,0,0.25);padding:10px;border-radius:8px;min-height:40px;color:var(--text);font-family:ui-monospace,monospace}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .small-input{padding:8px;border-radius:8px;background:var(--panel2);border:1px solid rgba(255,255,255,0.03);color:var(--text)}
+  footer{margin:26px 0 60px;color:var(--muted);text-align:center;font-size:0.86rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M3 5h18v14H3z" stroke="currentColor" stroke-width="1.2"/></svg>
+      <div>
+        <h1>Estruturas de Controle — If / Else / While / For (demo)</h1>
+        <div style="font-size:0.86rem;color:var(--muted)">Selecione um conector para ver explicação, código e executar exemplos interativos.</div>
+      </div>
+    </div>
+    <div class="controls">
+      <select id="selectMenu" class="btn" aria-label="Selecionar estrutura">
+        <option value="if">if</option>
+        <option value="elseif">else if</option>
+        <option value="else">else</option>
+        <option value="for">for</option>
+        <option value="while">while</option>
+        <option value="doWhile">do...while</option>
+      </select>
+      <button id="toggleTheme" class="btn">🌙 Tema</button>
+      <button id="copyCode" class="btn">📋 Copiar código</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <!-- LEFT: MENU / INFO -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Estruturas</strong>
+        <span style="color:var(--muted);font-size:0.86rem">Interativo • JS</span>
+      </div>
+
+      <div class="menu" id="menuList" style="margin-top:12px">
+        <button class="item btn" data-key="if"><span>if</span><small style="color:var(--muted)">condicional simples</small></button>
+        <button class="item btn" data-key="elseif"><span>else if</span><small style="color:var(--muted)">encadear condições</small></button>
+        <button class="item btn" data-key="else"><span>else</span><small style="color:var(--muted)">alternativa</small></button>
+        <button class="item btn" data-key="for"><span>for</span><small style="color:var(--muted)">loop com contador</small></button>
+        <button class="item btn" data-key="while"><span>while</span><small style="color:var(--muted)">loop condicional</small></button>
+        <button class="item btn" data-key="doWhile"><span>do...while</span><small style="color:var(--muted)">executa antes de checar</small></button>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+      <div>
+        <label class="small">Resumo rápido</label>
+        <ul style="margin:0;padding-left:18px;color:var(--muted)">
+          <li><strong>if</strong>: executa bloco se condição for verdadeira.</li>
+          <li><strong>else if</strong>: testa nova condição se a anterior for falsa.</li>
+          <li><strong>else</strong>: executa quando nenhuma condição anterior for verdadeira.</li>
+          <li><strong>for</strong>: loop com inicialização;condição;passo.</li>
+          <li><strong>while</strong>: repete enquanto condição for verdadeira.</li>
+          <li><strong>do...while</strong>: repete ao menos uma vez, depois checa a condição.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: CONTENT -->
+    <div>
+      <div id="contentCard" class="card">
+        <h2 id="heading" style="margin:0 0 6px 0">if</h2>
+        <div id="explain" style="color:var(--muted);margin-bottom:10px">
+          Executa um bloco quando a condição for verdadeira.
+        </div>
+
+        <label class="small">Sintaxe (JavaScript)</label>
+        <pre id="codeBlock" class="code">
+// exemplo
+if (condicao) {
+  // código executado se condicao for true
+}
+        </pre>
+
+        <div style="margin-top:12px">
+          <strong>Executar exemplo</strong>
+          <div id="exampleArea" class="example-run">
+            <!-- dynamic controls injected here -->
+          </div>
+          <div style="margin-top:8px"><label class="small">Resultado</label><div id="result" class="result">—</div></div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button id="resetBtn" class="btn">🔄 Reset</button>
+        <button id="explainMore" class="btn">ℹ️ Explicação detalhada</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Criado para demonstração educativa — código em JavaScript executado localmente no navegador.
+  </footer>
+</main>
+
+<script>
+(() => {
+  // Data for each structure: heading, explanation, code sample, UI builder function
+  const data = {
+    if: {
+      heading: 'if',
+      explain: 'Executa um bloco quando a condição for verdadeira.',
+      code: `// Exemplo: verificar número\nconst n = /* valor */;\nif (n > 0) {\n  console.log('Positivo');\n}`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <input id="num_if" class="small-input" type="number" placeholder="Digite um número" />
+            <button id="run_if" class="btn primary">▶️ Rodar</button>
+          </div>
+          <div style="font-size:0.86rem;color:var(--muted);margin-top:6px">Se n > 0 → mostra "Positivo"</div>
+        `;
+        container.querySelector('#run_if').addEventListener('click', () => {
+          const n = Number(container.querySelector('#num_if').value || 0);
+          if (n > 0) setResult(`n = ${n} → "Positivo"`);
+          else setResult(`n = ${n} → (nenhuma condição satisfeita)`);
+        });
+      }
+    },
+    elseif: {
+      heading: 'else if',
+      explain: 'Permite testar várias condições em sequência.',
+      code: `const n = /* valor */;\nif (n > 0) console.log('Positivo');\nelse if (n === 0) console.log('Zero');\nelse console.log('Negativo');`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <input id="num_elseif" class="small-input" type="number" placeholder="Digite um número" />
+            <button id="run_elseif" class="btn primary">▶️ Rodar</button>
+          </div>
+          <div style="font-size:0.86rem;color:var(--muted);margin-top:6px">Verifica >0, =0 ou &lt;0</div>
+        `;
+        container.querySelector('#run_elseif').addEventListener('click', () => {
+          const n = Number(container.querySelector('#num_elseif').value || 0);
+          let out;
+          if (n > 0) out = 'Positivo';
+          else if (n === 0) out = 'Zero';
+          else out = 'Negativo';
+          setResult(`n = ${n} → "${out}"`);
+        });
+      }
+    },
+    else: {
+      heading: 'else',
+      explain: 'Bloco que roda quando as condições anteriores forem falsas.',
+      code: `const pass = /* true ou false */;\nif (pass) console.log('Aprovado');\nelse console.log('Reprovado');`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <select id="sel_else" class="small-input">
+              <option value="true">true (aprovado)</option>
+              <option value="false">false (reprovado)</option>
+            </select>
+            <button id="run_else" class="btn primary">▶️ Rodar</button>
+          </div>
+        `;
+        container.querySelector('#run_else').addEventListener('click', () => {
+          const pass = container.querySelector('#sel_else').value === 'true';
+          if (pass) setResult('pass = true → "Aprovado"');
+          else setResult('pass = false → "Reprovado"');
+        });
+      }
+    },
+    for: {
+      heading: 'for',
+      explain: 'Loop com inicialização; condição; incremento — usado quando se sabe o número de repetições.',
+      code: `for (let i = 0; i < 5; i++) {\n  console.log(i);\n}`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <input id="for_start" class="small-input" type="number" placeholder="start (ex: 0)" value="0" />
+            <input id="for_end" class="small-input" type="number" placeholder="end (ex: 5)" value="5" />
+            <input id="for_step" class="small-input" type="number" placeholder="step (ex: 1)" value="1" />
+            <button id="run_for" class="btn primary">▶️ Rodar</button>
+          </div>
+          <div style="font-size:0.86rem;color:var(--muted);margin-top:6px">Gera sequência de start até (end-1) com passo.</div>
+        `;
+        container.querySelector('#run_for').addEventListener('click', () => {
+          const s = Number(container.querySelector('#for_start').value || 0);
+          const e = Number(container.querySelector('#for_end').value || 0);
+          const step = Number(container.querySelector('#for_step').value || 1) || 1;
+          const items = [];
+          if (step === 0) { setResult('Step não pode ser 0'); return; }
+          if ((step > 0 && s >= e) || (step < 0 && s <= e)) {
+            setResult('Sem iterações (verifique start/end/step)');
+            return;
+          }
+          for (let i = s; (step>0)? i < e : i > e; i += step) items.push(i);
+          setResult('Sequência: ' + items.join(', '));
+        });
+      }
+    },
+    while: {
+      heading: 'while',
+      explain: 'Executa enquanto a condição for verdadeira — cuidado com loops infinitos.',
+      code: `let i = 0;\nwhile (i < 5) {\n  console.log(i);\n  i++;\n}`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <input id="while_start" class="small-input" type="number" placeholder="start (ex: 0)" value="0" />
+            <input id="while_limit" class="small-input" type="number" placeholder="limit (ex: 5)" value="5" />
+            <button id="run_while" class="btn primary">▶️ Rodar</button>
+          </div>
+          <div style="font-size:0.86rem;color:var(--muted);margin-top:6px">Executa incrementando até atingir o limite.</div>
+        `;
+        container.querySelector('#run_while').addEventListener('click', () => {
+          let i = Number(container.querySelector('#while_start').value || 0);
+          const limit = Number(container.querySelector('#while_limit').value || 0);
+          const items = [];
+          let safety = 10000;
+          while (i < limit && safety-- > 0) {
+            items.push(i);
+            i++;
+          }
+          if (safety <= 0) setResult('Abortado: possível loop infinito');
+          else setResult('Sequência: ' + items.join(', '));
+        });
+      }
+    },
+    doWhile: {
+      heading: 'do...while',
+      explain: 'Executa o bloco uma vez antes de checar a condição; útil quando quer um passo inicial garantido.',
+      code: `let i = 0;\ndo {\n  console.log(i);\n  i++;\n} while (i < 3);`,
+      buildUI(container, setResult) {
+        container.innerHTML = `
+          <div class="row">
+            <input id="do_start" class="small-input" type="number" placeholder="start (ex: 0)" value="0" />
+            <input id="do_limit" class="small-input" type="number" placeholder="limit (ex: 3)" value="3" />
+            <button id="run_do" class="btn primary">▶️ Rodar</button>
+          </div>
+          <div style="font-size:0.86rem;color:var(--muted);margin-top:6px">Sempre mostra pelo menos uma iteração.</div>
+        `;
+        container.querySelector('#run_do').addEventListener('click', () => {
+          let i = Number(container.querySelector('#do_start').value || 0);
+          const limit = Number(container.querySelector('#do_limit').value || 0);
+          const items = [];
+          let safety = 10000;
+          do {
+            items.push(i);
+            i++;
+            if (safety-- <= 0) { setResult('Abortado: possível loop infinito'); return; }
+          } while (i < limit);
+          setResult('Sequência: ' + items.join(', '));
+        });
+      }
+    }
+  };
+
+  // DOM refs
+  const selectMenu = document.getElementById('selectMenu');
+  const menuList = document.getElementById('menuList');
+  const heading = document.getElementById('heading');
+  const explain = document.getElementById('explain');
+  const codeBlock = document.getElementById('codeBlock');
+  const exampleArea = document.getElementById('exampleArea');
+  const result = document.getElementById('result');
+  const copyBtn = document.getElementById('copyCode');
+  const toggleTheme = document.getElementById('toggleTheme');
+  const resetBtn = document.getElementById('resetBtn');
+  const explainMore = document.getElementById('explainMore');
+
+  // theme
+  const THEME_KEY = 'logic.theme';
+  (localStorage.getItem(THEME_KEY) || 'dark') === 'light' && document.documentElement.classList.add('light');
+  toggleTheme.addEventListener('click', () => {
+    document.documentElement.classList.toggle('light');
+    const mode = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+    localStorage.setItem(THEME_KEY, mode);
+    toggleTheme.textContent = mode === 'light' ? '☀️ Claro' : '🌙 Escuro';
+  });
+  // init button text
+  toggleTheme.textContent = document.documentElement.classList.contains('light') ? '☀️ Claro' : '🌙 Escuro';
+
+  // helpers
+  function setActive(key) {
+    // menu highlight
+    menuList.querySelectorAll('.item').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+    selectMenu.value = key;
+    const d = data[key];
+    heading.textContent = d.heading;
+    explain.textContent = d.explain;
+    codeBlock.textContent = d.code;
+    exampleArea.innerHTML = '';
+    result.textContent = '—';
+    d.buildUI(exampleArea, (txt) => { result.textContent = txt; });
+  }
+
+  // menu clicks
+  menuList.querySelectorAll('.item').forEach(b => {
+    b.addEventListener('click', () => setActive(b.dataset.key));
+  });
+  selectMenu.addEventListener('change', () => setActive(selectMenu.value));
+
+  // initial
+  setActive('if');
+
+  // copy code
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+      copyBtn.textContent = '✅ Copiado';
+      setTimeout(() => copyBtn.textContent = '📋 Copiar código', 900);
+    });
+  });
+
+  // reset
+  resetBtn.addEventListener('click', () => {
+    exampleArea.querySelectorAll('input').forEach(i => i.value = '');
+    result.textContent = '—';
+  });
+
+  explainMore.addEventListener('click', () => {
+    alert('Dicas: \n\n• Evite modificar variáveis de controle dentro de loops sem cuidado.\n• while pode gerar loops infinitos se a condição nunca ficar falsa.\n• for é ideal quando você conhece o número de repetições.\n• use else if para encadear condições mutuamente exclusivas.\n\nExemplos mostrados em JavaScript; sintaxe difere (pouco) em outras linguagens.');
+  });
+
+})();
+</script>
+</body>
+</html>
