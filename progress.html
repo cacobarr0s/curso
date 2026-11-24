@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Progress Card</title>
+<style>
+  :root { color-scheme: light; --ink:#202a35; --muted:#667382; --line:#d8e0e8; --accent:#254f70; --paper:#fff; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:32px 16px; background:#eef2f5; color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+  .page { max-width:860px; margin:0 auto; }
+  .top { margin-bottom:22px; }
+  h1 { margin:0 0 7px; font-size:26px; }
+  .intro { margin:0; color:var(--muted); font-size:14px; }
+  .layout { display:grid; grid-template-columns:minmax(280px, .9fr) minmax(320px, 1.1fr); gap:22px; align-items:start; }
+  .panel, .card { background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 28px rgba(25,45,65,.06); }
+  .panel { padding:22px; }
+  label { display:block; margin:0 0 7px; font-size:12px; font-weight:700; letter-spacing:.07em; color:#4d5c6b; }
+  input, select, textarea { width:100%; border:1px solid #cbd5df; border-radius:8px; padding:12px; font:inherit; font-size:15px; color:var(--ink); background:#fff; text-transform:uppercase; }
+  input:focus, select:focus, textarea:focus { outline:2px solid #9bbbd2; border-color:var(--accent); }
+  textarea { min-height:170px; resize:vertical; line-height:1.5; }
+  .field { margin-bottom:18px; }
+  .hint { margin:6px 0 0; font-size:11px; color:var(--muted); }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+  button { border:0; border-radius:8px; padding:12px 15px; font-weight:700; cursor:pointer; }
+  .primary { color:#fff; background:var(--accent); }
+  .secondary { color:var(--accent); background:#e8f0f5; }
+  button:hover { filter:brightness(.96); }
+  .card { padding:30px; min-height:450px; }
+  .card-head { padding-bottom:18px; border-bottom:2px solid var(--accent); }
+  .eyebrow { color:var(--accent); font-size:11px; font-weight:700; letter-spacing:.16em; }
+  .card h2 { margin:8px 0 0; font-size:24px; }
+  .details { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:24px 0; }
+  .detail-label { display:block; margin-bottom:6px; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.12em; }
+  .detail-value { min-height:22px; font-size:15px; font-weight:700; overflow-wrap:anywhere; }
+  .notes-title { margin:26px 0 9px; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.12em; }
+  .notes { min-height:155px; font-size:14px; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .signature { margin-top:32px; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }
+  @media (max-width:700px) { .layout { grid-template-columns:1fr; } body { padding:20px 12px; } .card { min-height:0; } }
+  @media print {
+    @page { size:A4; margin:18mm; }
+    body { padding:0; background:#fff; }
+    .top, .panel { display:none !important; }
+    .page, .layout { display:block; max-width:none; }
+    .card { border:0; border-radius:0; box-shadow:none; padding:12mm; min-height:0; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="top">
+    <h1>Student Progress Card</h1>
+    <p class="intro">Fill in the student details and save a clean copy as a PDF or PNG image.</p>
+  </header>
+
+  <section class="layout">
+    <form class="panel" id="cardForm">
+      <div class="field">
+        <label for="teacher">TEACHER</label>
+        <select id="teacher">
+          <option value="CACO">CACO</option>
+          <option value="SAMANTA">SAMANTA</option>
+          <option value="FRANCINE">FRANCINE</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="student">STUDENT NAME</label>
+        <input id="student" type="text" placeholder="STUDENT NAME" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="book">CURRENT BOOK</label>
+        <input id="book" type="text" placeholder="BOOK TITLE" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="notes">TEACHER'S NOTES ABOUT THE STUDENT</label>
+        <textarea id="notes" placeholder="WRITE YOUR OBSERVATIONS HERE..."></textarea>
+        <p class="hint">All text is automatically converted to uppercase.</p>
+      </div>
+      <div class="actions">
+        <button class="primary" type="button" id="pdfBtn">SAVE AS PDF</button>
+        <button class="secondary" type="button" id="imageBtn">SAVE AS PNG</button>
+      </div>
+    </form>
+
+    <article class="card" id="studentCard">
+      <div class="card-head">
+        <div class="eyebrow">STUDENT DEVELOPMENT</div>
+        <h2>STUDENT PROGRESS CARD</h2>
+      </div>
+      <div class="details">
+        <div><span class="detail-label">TEACHER</span><div class="detail-value" id="outTeacher">CACO</div></div>
+        <div><span class="detail-label">STUDENT</span><div class="detail-value" id="outStudent">—</div></div>
+        <div><span class="detail-label">CURRENT BOOK</span><div class="detail-value" id="outBook">—</div></div>
+      </div>
+      <div class="notes-title">TEACHER'S NOTES</div>
+      <div class="notes" id="outNotes">YOUR OBSERVATIONS WILL APPEAR HERE.</div>
+      <div class="signature">TEACHER: <span id="outSignature">CACO</span></div>
+    </article>
+  </section>
+</main>
+<script>
+(() => {
+  const fields = {
+    teacher: document.getElementById('teacher'),
+    student: document.getElementById('student'),
+    book: document.getElementById('book'),
+    notes: document.getElementById('notes')
+  };
+  const outputs = {
+    teacher: document.getElementById('outTeacher'),
+    student: document.getElementById('outStudent'),
+    book: document.getElementById('outBook'),
+    notes: document.getElementById('outNotes'),
+    signature: document.getElementById('outSignature')
+  };
+  const upper = value => value.toLocaleUpperCase();
+  const safeFilePart = value => upper(value.trim())
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'UNTITLED';
+  function update() {
+    for (const key of ['student', 'book', 'notes']) {
+      const start = fields[key].selectionStart;
+      const end = fields[key].selectionEnd;
+      const converted = upper(fields[key].value);
+      if (fields[key].value !== converted) {
+        fields[key].value = converted;
+        try { fields[key].setSelectionRange(start, end); } catch (_) {}
+      }
+    }
+    outputs.teacher.textContent = fields.teacher.value;
+    outputs.signature.textContent = fields.teacher.value;
+    outputs.student.textContent = fields.student.value || '—';
+    outputs.book.textContent = fields.book.value || '—';
+    outputs.notes.textContent = fields.notes.value || 'YOUR OBSERVATIONS WILL APPEAR HERE.';
+  }
+  Object.values(fields).forEach(field => field.addEventListener('input', update));
+  fields.teacher.addEventListener('change', update);
+  function filename() {
+    return [
+      safeFilePart(fields.student.value || 'STUDENT'),
+      safeFilePart(fields.teacher.value),
+      safeFilePart(fields.book.value || 'BOOK')
+    ].join('_');
+  }
+  document.getElementById('pdfBtn').addEventListener('click', () => {
+    update();
+    const oldTitle = document.title;
+    document.title = filename();
+    window.print();
+    setTimeout(() => { document.title = oldTitle; }, 1000);
+  });
+  document.getElementById('imageBtn').addEventListener('click', async () => {
+    update();
+    const card = document.getElementById('studentCard');
+    const rect = card.getBoundingClientRect();
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(rect.width * scale);
+    canvas.height = Math.ceil(rect.height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Draw the card using its live content, without external libraries.
+    const styles = getComputedStyle(card);
+    ctx.fillStyle = '#202a35';
+    ctx.font = '700 11px Arial';
+    ctx.fillStyle = '#254f70';
+    ctx.fillText('STUDENT DEVELOPMENT', 30, 52);
+    ctx.fillStyle = '#202a35';
+    ctx.font = '700 24px Arial';
+    ctx.fillText('STUDENT PROGRESS CARD', 30, 83);
+    ctx.strokeStyle = '#254f70'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(30, 101); ctx.lineTo(rect.width - 30, 101); ctx.stroke();
+
+    const wrap = (text, x, y, maxWidth, lineHeight, font) => {
+      ctx.font = font;
+      const words = (text || '—').split(/\s+/);
+      let line = '', yy = y;
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          ctx.fillText(line, x, yy); line = word; yy += lineHeight;
+        } else line = test;
+      }
+      if (line) ctx.fillText(line, x, yy);
+      return yy;
+    };
+    const left = 30, right = Math.max(190, rect.width / 2 + 10);
+    ctx.fillStyle = '#667382'; ctx.font = '700 10px Arial';
+    ctx.fillText('TEACHER', left, 132); ctx.fillText('STUDENT', right, 132);
+    ctx.fillStyle = '#202a35'; ctx.font = '700 15px Arial';
+    ctx.fillText(fields.teacher.value, left, 155);
+    wrap(fields.student.value || '—', right, 155, rect.width - right - 30, 20, '700 15px Arial');
+    ctx.fillStyle = '#667382'; ctx.font = '700 10px Arial';
+    ctx.fillText('CURRENT BOOK', left, 195);
+    ctx.fillStyle = '#202a35';
+    wrap(fields.book.value || '—', left, 218, rect.width - 60, 20, '700 15px Arial');
+    ctx.fillStyle = '#667382'; ctx.font = '700 10px Arial';
+    ctx.fillText("TEACHER'S NOTES", left, 260);
+    ctx.fillStyle = '#202a35';
+    const noteLines = (fields.notes.value || 'YOUR OBSERVATIONS WILL APPEAR HERE.').split('\n');
+    let y = 286;
+    for (const paragraph of noteLines) {
+      y = wrap(paragraph, left, y, rect.width - 60, 22, '14px Arial') + 22;
+    }
+    ctx.strokeStyle = '#d8e0e8'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(left, Math.max(y + 28, rect.height - 55)); ctx.lineTo(rect.width - 30, Math.max(y + 28, rect.height - 55)); ctx.stroke();
+    ctx.fillStyle = '#667382'; ctx.font = '11px Arial';
+    ctx.fillText('TEACHER: ' + fields.teacher.value, left, Math.max(y + 48, rect.height - 34));
+
+    const link = document.createElement('a');
+    link.download = filename() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+  update();
+})();
+</script>
+</body>
+</html>
